@@ -26,7 +26,7 @@ cd econflux
 cp .env.example .env   # fill BEDROCK_MODEL_ID etc.
 uv sync
 uv pip install -e .
-uv run -m econflux.runtime.app
+LOG_LEVEL=INFO uv run app.py
 ````
 
 Then:
@@ -39,8 +39,16 @@ curl -X POST http://localhost:8080/invocations \
 
 You will receive a JSON response with the model’s answer.
 
-## Next Steps
+## Deploy the local code to Amamzon Bedrock AgentCore
 
-* Add more yfinance tools (options, news, holders)
-* Add memory and user profiles
-* Deploy through Amazon Bedrock AgentCore for production usage
+```bash
+agentcore configure --entrypoint ./econflux/runtime/app.py --name econflux
+```
+
+```bash
+agentcore deploy --local
+```
+
+```bash
+agentcore launch
+```
