@@ -15,6 +15,7 @@ env/
 uv.uv_lock
 uv.lock
 
+financial_intelligence_data
 
 .bedrock_agentcore
 
