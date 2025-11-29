@@ -13,6 +13,8 @@ env/
 .uv_lock/
 .uv_cache/
 uv.uv_lock
+uv.lock
+
 
 .bedrock_agentcore/
 
