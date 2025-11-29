@@ -16,7 +16,7 @@ uv.uv_lock
 uv.lock
 
 
-.bedrock_agentcore/
+.bedrock_agentcore
 
 # Package and build output
 build/
