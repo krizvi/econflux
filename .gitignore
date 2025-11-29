@@ -12,6 +12,9 @@ env/
 .uv/
 .uv_lock/
 .uv_cache/
+uv.uv_lock
+
+.bedrock_agentcore/
 
 # Package and build output
 build/
