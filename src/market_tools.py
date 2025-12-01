@@ -26,8 +26,26 @@ def _normalize_ticker(ticker: str) -> dict:
 @tool
 def get_stock_price(ticker: str) -> Dict[str, Any]:
     """
-    Return the latest stock price along with currency and previous close.
-    (Mock implementation using random data.)
+    Return a mock latest stock quote (price, currency, previous close, exchange).
+
+    Use when you need an example quote without calling real market data. Values are
+    randomly generated per call and unsuitable for trading/analysis.
+
+    Args:
+        ticker: Stock symbol (case-insensitive). It is uppercased for the response.
+
+    Returns:
+        Dict with:
+        - ticker: Uppercased symbol
+        - price: Mock latest price (float)
+        - currency: Quotation currency (string)
+        - previous_close: Mock previous close (float)
+        - exchange: Mock exchange code (string)
+        - timestamp: ISO-8601 UTC timestamp with trailing "Z"
+
+    Notes:
+        - Values are synthetic and change on every call
+        - No external APIs are contacted; this is a local mock
     """
     quote = _normalize_ticker(ticker)
 
@@ -46,7 +64,26 @@ def get_price_history(
     ticker: str, period: str = "5d", interval: str = "1d"
 ) -> Dict[str, Any]:
     """
-    Return mock OHLCV series for a ticker.
+    Return a mock OHLCV (Open, High, Low, Close, Volume) history with five synthetic periods.
+
+    Use for placeholder history when real data is unavailable. `period` and `interval`
+    are informational only; five entries are always generated to keep payloads small.
+
+    Args:
+        ticker: Stock symbol (case-insensitive). It is uppercased for the response.
+        period: Label for the requested period (informational only).
+        interval: Label for the requested interval (informational only).
+
+    Returns:
+        Dict with:
+        - ticker: Uppercased symbol
+        - period: Echoed input period
+        - interval: Echoed input interval
+        - history: Mapping of period keys to OHLCV fields (open, high, low, close, volume)
+
+    Notes:
+        - All values are randomly generated and will differ on each call
+        - Exactly five entries are returned to simplify downstream handling
     """
     t = ticker.upper()
 
@@ -75,7 +112,23 @@ def get_price_history(
 @tool
 def get_earnings(ticker: str) -> Dict[str, Any]:
     """
-    Return mock earnings calendar and earnings fields.
+    Return a mock earnings snapshot and next earnings date for a ticker.
+
+    Use for placeholder fundamentals without hitting external services. All values are
+    synthetic and intended for demos/testing.
+
+    Args:
+        ticker: Stock symbol (case-insensitive). It is uppercased for the response.
+
+    Returns:
+        Dict with:
+        - ticker: Uppercased symbol
+        - calendar: {next_earnings_date: ISO date string}
+        - earnings: {eps_actual, eps_estimate, revenue_actual, revenue_estimate}
+
+    Notes:
+        - Values are synthetic and change on every call
+        - Calendar dates are forward-looking but not linked to real schedules
     """
     t = ticker.upper()
 
@@ -104,7 +157,28 @@ def get_earnings(ticker: str) -> Dict[str, Any]:
 @tool
 def generate_stock_report(ticker: str, period: str = "5d") -> Dict[str, Any]:
     """
-    Generate a compact stock report combining mock latest price, history, and earnings snapshot.
+    Generate a compact mock stock report combining quote, history, and earnings.
+
+    Use when you want one payload summarizing the mock market data tools
+    (`get_stock_price`, `get_price_history`, `get_earnings`).
+
+    Args:
+        ticker: Stock symbol (case-insensitive). It is uppercased for the response.
+        period: Label passed through to `get_price_history` to tag the history payload.
+
+    Returns:
+        Dict with:
+        - ticker: Uppercased symbol
+        - summary: Latest price, previous close, currency, exchange
+        - history: OHLCV series from `get_price_history`
+        - earnings: Earnings fields from `get_earnings`
+        - calendar: Next earnings date from `get_earnings`
+        - generated_at: ISO-8601 UTC timestamp with trailing "Z"
+
+    Notes:
+        - All values are synthetic and differ per call
+        - Because each mock is invoked once per request, values stay internally consistent
+          within a single response but not across separate invocations
     """
     price = get_stock_price(ticker)
     history = get_price_history(ticker, period=period)

@@ -2,7 +2,7 @@ from typing import List
 
 from strands import Agent
 from strands.models import BedrockModel
-from strands_tools import calculator, retrieve
+from strands_tools import calculator, retrieve, use_llm
 
 
 from config import load_model_config
@@ -14,6 +14,13 @@ from market_tools import (
 )
 
 from health_check_tools import ping
+from rag_tools import (
+    query_monetary_policy_kb,
+    query_regulatory_changes_kb,
+    query_policy_decisions_kb,
+    query_economic_indicators_kb,
+)
+
 
 def build_agent() -> Agent:
     """
@@ -46,7 +53,12 @@ def build_agent() -> Agent:
         generate_stock_report,
         ping,
         calculator,
-        retrieve
+        retrieve,
+        query_economic_indicators_kb,
+        query_monetary_policy_kb,
+        query_policy_decisions_kb,
+        query_regulatory_changes_kb,
+        use_llm,
     ]
 
     agent = Agent(

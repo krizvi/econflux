@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
-from core_agent import build_agent
+from econflux_agent import build_agent
 
 # Custom TRACE level
 TRACE_LEVEL = 5
