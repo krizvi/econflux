@@ -43,7 +43,7 @@ curl -X POST http://localhost:8080/invocations \
 ```bash
 curl -X POST http://localhost:8080/invocations \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Conduct a peer analysis of Walmart, Target, and Costco. Compare their price performance, earnings quality, and upcoming catalyst calendars. Which retailer presents the most compelling risk-reward profile right now?"}'
+  -d '{"prompt": "Conduct a peer analysis of Walmart, Target, and Costco as a table. Compare their price performance, earnings quality, and upcoming catalyst calendars. Which retailer presents the most compelling risk-reward profile right now?"}'
 ```
 
 ```bash
@@ -263,3 +263,29 @@ curl -X POST http://localhost:8080/invocations \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Energy stocks - Exxon, Chevron, ConocoPhillips. I want to hold one for a month. Compare their recent momentum, how good their earnings are, and when they report next. Which one is my best bet for entry right now for a 30-day hold?"}'
 ```
+
+
+# 5 Philosophical Prompts for Central Banking Policy Decisions
+
+1. "How do central banks balance short-term economic stability against long-term moral hazard when making interest rate decisions during financial crises? Consider historical vote splits and committee deliberations."
+
+2. "What ethical frameworks guide central bankers' forward guidance during periods of high inflation versus high unemployment? Analyze the philosophical underpinnings of policy decisions and dissenting votes."
+
+3. "Examine the tension between technocratic expertise and democratic accountability in monetary policy. How do committee votes reflect this philosophical dilemma in recent central bank decisions?"
+
+4. "What constitutes 'rational expectations' in forward guidance, and how do central banks navigate the epistemological challenge of communicating future policy intentions while maintaining flexibility?"
+
+5. "Consider the utilitarian calculus behind policy decisions during stagflation periods. How do vote splits and committee statements reveal different ethical considerations about distributional impacts?"
+
+
+# Philosophical Economic Prompts on Indicators
+
+1. "How might we reconcile the apparent contradiction between rising GDP figures and stagnant real wage growth? Please analyze recent economic indicators to explore this tension between aggregate prosperity and individual economic well-being."
+
+2. "What philosophical principles underpin our interpretation of unemployment statistics as 'natural' versus 'cyclical'? Examine recent labor market indicators to illustrate how these conceptual frameworks shape policy responses."
+
+3. "In what ways do our measurement methodologies for inflation via CPI potentially privilege certain economic narratives over others? Please ground your analysis in recent inflation indicator trends and their varied interpretations."
+
+4. "How should we ethically weigh the short-term economic pain reflected in PMI contractions against the potential long-term benefits of economic restructuring? Please incorporate recent manufacturing and services PMI data in your philosophical exploration."
+
+5. "To what extent does our focus on discrete economic indicators like GDP represent a form of reductionism that obscures more holistic understandings of economic well-being? Please analyze recent indicator releases to illustrate the limitations and benefits of our quantification-focused approach to economic analysis."
