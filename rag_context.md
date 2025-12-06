@@ -73,3 +73,105 @@ Yes, Lambda can be integrated with API Gateway, where Lambda functions can be tr
 ---
 
 In practice, the chunks might be ranked by relevance, truncated to fit token limits, or filtered to the most relevant ones. This approach reduces hallucinations by grounding the response in retrieved data while keeping the process efficient.
+
+
+
+----
+function formatKnowledgeBaseLLMPrompt(kbResponse, udrBaseURL) {
+	try {
+		// Process each chunk in the search results
+		const formattedChunks = [];
+		const references = [];
+		const citationLinks = [];
+
+		if (kbResponse.data && Array.isArray(kbResponse.data)) {
+			// Sort chunks by score in descending order and keep only top three
+			const sortedData = [...kbResponse.data].sort((a, b) => b.score - a.score).slice(0, 3);
+
+			sortedData.forEach((item, index) => {
+				// Get the document citation number
+				const citationNumber = index + 1;
+
+				// Get citation source - extract just the filename without path
+				const fullPath = item.file_id || `Document ${citationNumber}`;
+				const filename = fullPath.split("/").pop(); // Extract just the filename without path
+
+				// Parse filename into collectionName and uniqueIdentifier
+				const lastUnderscoreIndex = filename.lastIndexOf("_");
+				const collectionName =
+					lastUnderscoreIndex !== -1 ? filename.substring(0, lastUnderscoreIndex) : filename;
+				const uniqueIdentifier =
+					lastUnderscoreIndex !== -1 ? filename.substring(lastUnderscoreIndex + 1) : filename;
+
+				// Create hyperlinked citation
+				const hyperlinkCitation = `<a href="https://${udrBaseURL}/getDocumentPDF/?collectionName=${collectionName}&uniqueIdentifier=${uniqueIdentifier}" target="_blank" rel="noopener noreferrer">[${citationNumber}]</a>`;
+
+				// Store the citation link for later reference
+				citationLinks.push({
+					number: citationNumber,
+					link: hyperlinkCitation,
+				});
+
+				// Add reference with file info
+				references.push(`${hyperlinkCitation} ${filename}`);
+
+				// Format the chunk text with citation marker WITHIN the text
+				if (item.content && Array.isArray(item.content)) {
+					// Get the text content
+					let chunkText = item.content.map((contentItem) => contentItem.text || "").join(" ");
+
+					// Insert citation markers after each sentence or paragraph
+					// Split by periods followed by spaces or newlines
+					const sentences = chunkText.split(/\.\s+|\.\r|\.\n/);
+
+					// Reconstruct the text with citation markers added
+					chunkText = sentences
+						.map((sentence, i) => {
+							// Skip empty sentences
+							if (!sentence.trim()) return "";
+
+							// Add period back except for the last sentence if it doesn't end with a period
+							const period = i < sentences.length - 1 || sentence.endsWith(".") ? "." : "";
+
+							// Add citation marker after the sentence
+							return `${sentence}${period} [${citationNumber}] `;
+						})
+						.join(" ")
+						.trim();
+
+					if (chunkText.trim()) {
+						formattedChunks.push(
+							`[DOCUMENT ${citationNumber}]\n${chunkText}\n[END DOCUMENT ${citationNumber}]`
+						);
+					}
+				}
+			});
+		}
+
+		// Join the chunks with spacing
+		const chunksText = formattedChunks.join("\n\n");
+
+		// Create the formatted prompt with clear instructions to preserve the citations
+		const formattedPrompt = `
+User Prompt:
+Proofread the following document content and rewrite it as professional content using perfect English applying "Strunk and White's Elements of Style" principles.
+
+IMPORTANT: The document already contains citation numbers in the format [1], [2], etc. 
+
+Available citation HTML tags to use:
+${citationLinks.map((c) => `Replace [${c.number}] with: ${c.link}`).join("\n")}
+
+Structure your response as:
+1. Your professionally written content with the citations inserted
+2. A divider line (---)
+3. All citations as a numbered list that is clickable by the user
+
+Documents to be proofread, keeping the citations as it is as clickable links:
+${chunksText}
+`;
+		return formattedPrompt;
+	} catch (error) {
+		return `Error processing Knowledge Base response: ${error.message}`;
+	}
+}
+---
