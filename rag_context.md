@@ -85,8 +85,8 @@ function formatKnowledgeBaseLLMPrompt(kbResponse, udrBaseURL) {
 		const citationLinks = [];
 
 		if (kbResponse.data && Array.isArray(kbResponse.data)) {
-			// Sort chunks by score in descending order and keep only top three
-			const sortedData = [...kbResponse.data].sort((a, b) => b.score - a.score).slice(0, 3);
+			// Sort chunks by score in descending order and include all
+			const sortedData = [...kbResponse.data].sort((a, b) => b.score - a.score);
 
 			sortedData.forEach((item, index) => {
 				// Get the document citation number
@@ -133,8 +133,8 @@ function formatKnowledgeBaseLLMPrompt(kbResponse, udrBaseURL) {
 							// Add period back except for the last sentence if it doesn't end with a period
 							const period = i < sentences.length - 1 || sentence.endsWith(".") ? "." : "";
 
-							// Add citation marker after the sentence
-							return `${sentence}${period} [${citationNumber}] `;
+					// Add citation marker after the sentence
+					return `${sentence}${period} [${citationNumber}] `;
 						})
 						.join(" ")
 						.trim();
@@ -154,19 +154,16 @@ function formatKnowledgeBaseLLMPrompt(kbResponse, udrBaseURL) {
 		// Create the formatted prompt with clear instructions to preserve the citations
 		const formattedPrompt = `
 User Prompt:
-Proofread the following document content and rewrite it as professional content using perfect English applying "Strunk and White's Elements of Style" principles.
+Proofread these chunks and rewrite them into one unified professional generation using perfect English applying "Strunk and White's Elements of Style" principles.
 
-IMPORTANT: The document already contains citation numbers in the format [1], [2], etc. 
-
-Available citation HTML tags to use:
-${citationLinks.map((c) => `Replace [${c.number}] with: ${c.link}`).join("\n")}
+IMPORTANT: The chunks already contain citation numbers in the format [1], [2], etc. 
 
 Structure your response as:
-1. Your professionally written content with the citations inserted
+1. Your professionally written unified content with the citations as [1], [2], etc.
 2. A divider line (---)
-3. All citations as a numbered list that is clickable by the user
+3. A numbered list of clickable citation links: ${references.map((ref, i) => `${i + 1}. ${ref}`).join('\n')}
 
-Documents to be proofread, keeping the citations as it is as clickable links:
+Chunks to be proofread and unified:
 ${chunksText}
 `;
 		return formattedPrompt;
