@@ -1,0 +1,54 @@
+default_agent: econflux_ai
+agents:
+  econflux_ai:
+    name: econflux_ai
+    entrypoint: /home/ubuntu/mydata/code/poc/econflux/src/app.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/ubuntu/mydata/code/poc/econflux/src
+    aws:
+      execution_role: arn:aws:iam::128959305403:role/AmazonBedrockAgentCoreSDKRuntime-us-east-1-44488ab3e7
+      execution_role_auto_create: false
+      account: '128959305403'
+      region: us-east-1
+      ecr_repository: 128959305403.dkr.ecr.us-east-1.amazonaws.com/bedrock-agentcore-econflux_ai
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: econflux_ai-2n4x7aA3fX
+      agent_arn: arn:aws:bedrock-agentcore:us-east-1:128959305403:runtime/econflux_ai-2n4x7aA3fX
+      agent_session_id: 9a74a673-6fa9-47cb-ac65-4abb6869d1fc
+    codebuild:
+      project_name: bedrock-agentcore-econflux_ai-builder
+      execution_role: arn:aws:iam::128959305403:role/AmazonBedrockAgentCoreSDKCodeBuild-us-east-1-44488ab3e7
+      source_bucket: bedrock-agentcore-codebuild-sources-128959305403-us-east-1
+    memory:
+      mode: NO_MEMORY
+      memory_id: null
+      memory_arn: null
+      memory_name: null
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
