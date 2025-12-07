@@ -173,7 +173,19 @@ ${chunksText}
 }
 ---
 
-~~~~~
+if you look at the `server_code.ts` code 
+
+```
+${references
+	.map((ref, i) => `[${i + 1}] [Open PDF for ${ref.collectionName}-${ref.uniqueIdentifier}](on:click|preventDefault={()=>fetchAndOpenPDF(${ref.url}))`)
+	.join("\n")}
+```
+
+the above code is suppose to open a MD in ChatMessage.svelete ( and it does just fine when I send a http://kkkkk url instead of on:click......)
+
+Mind it that the ChatMessage.svelete. I added the async func `fetchAndOpenPDF` as it is a clear place but the code that takes care of the response as rendering is not to be touched as the same code is used for generated response with or without citattions, and also the code is battel tesetd and i just do not feel like tinkering with it just to handle my citations. Please tell me how do i construct the code `(on:click|preventDefault={()=>fetchAndOpenPDF(${ref.url})` that works just the way i want, which is that the code should be served by the async func
+
+```ts (server_code.ts)
 export type ResponseWithCitations = {
 	kind: string;
 	fullText: string;
@@ -255,7 +267,7 @@ function formatKnowledgeBaseLLMPrompt(kbResponse, udrBaseURL) {
 
 Citations:
 ${references
-	.map((ref, i) => `[${i + 1}] [Open PDF for ${ref.collectionName}-${ref.uniqueIdentifier}](on:click|preventDefault={()=>fetchAndOpenPDF(${ref.url}))`)
+	.map((ref, i) => `[${i + 1}] [Open PDF for ${ref.collectionName}-${ref.uniqueIdentifier}](https://# on:click|preventDefault={()=>fetchAndOpenPDF("${ref.url}"))`)
 	.join("\n")}
 
 Documents:
@@ -291,7 +303,9 @@ export async function streamModelResponseWithCitations(opts: {
 		fullText,
 	};
 }
-~~~~~
+```
+
+```.svelte (ChatMessage.svelte)
 <script lang="ts">
 	import type { Message } from "$lib/types/Message";
 	import { afterUpdate, createEventDispatcher, tick } from "svelte";
@@ -359,27 +373,6 @@ export async function streamModelResponseWithCitations(opts: {
 		!message.content && (webSearchIsDone || (searchUpdates && searchUpdates.length === 0));
 
 	const settings = useSettingsStore();
-
-	// afterUpdate(() => {
-	// 	if ($settings.disableStream) {
-	// 		return;
-	// 	}
-
-	// 	loadingEl?.$destroy();
-	// 	clearTimeout(pendingTimeout);
-
-	// 	// Add loading animation to the last message if update takes more than 600ms
-	// 	if (isLast && loading && emptyLoad) {
-	// 		pendingTimeout = setTimeout(() => {
-	// 			if (contentEl) {
-	// 				loadingEl = new IconLoading({
-	// 					target: deepestChild(contentEl),
-	// 					props: { classNames: "loading inline ml-2 first:ml-0" },
-	// 				});
-	// 			}
-	// 		}, 600);
-	// 	}
-	// });
 
 	let showLoader = false;
 	let showLoaderDeferred = false;
@@ -860,4 +853,118 @@ export async function streamModelResponseWithCitations(opts: {
 		}
 	}
 </style>
-~~~
+```
+
+```md
+Right now you’re trying to do the software-equivalent of shouting JavaScript into a PDF and hoping the browser hears it. It just can’t.
+
+Your latest attempt:
+
+```ts
+${references
+  .map(
+    (ref, i) =>
+      `[${i + 1}] [Open PDF for ${ref.collectionName}-${ref.uniqueIdentifier}](https://# on:click|preventDefault(()=>fetchAndOpenPDF("${ref.url}"))`
+  )
+  .join("\n")}
+```
+
+After Markdown, that becomes roughly:
+
+```html
+<a href="https://# on:click|preventDefault(()=>fetchAndOpenPDF(&quot;...&quot;))">
+  Open PDF for …
+</a>
+```
+
+To the browser this is **just a weird href string**.
+Svelte never sees `on:click`, so `fetchAndOpenPDF` is never called. No amount of massaging that string will make `on:click` behave like a Svelte directive, because Svelte only processes directives in compiled `.svelte` templates, not in runtime Markdown.
+
+There is no “correct syntax” for `on:click` inside that Markdown link. It fundamentally cannot work.
+
+---
+
+### The smallest workable pattern
+
+1. **Server:** emit a normal `<a>` with a data attribute.
+2. **Client (`ChatMessage.svelte`):** catch clicks on those links and call `fetchAndOpenPDF`.
+
+#### 1. Change the server code to this:
+
+```ts
+${references
+  .map(
+    (ref, i) =>
+      `[${i + 1}] <a href="#" class="kb-citation" data-api-url="${ref.url}">Open PDF for ${ref.collectionName}-${ref.uniqueIdentifier}</a>`
+  )
+  .join("\n")}
+```
+
+That’s valid Markdown (raw HTML allowed), and after rendering you’ll get:
+
+```html
+<a href="#" class="kb-citation" data-api-url="https://…/getDocumentPDF?...">
+  Open PDF for …
+</a>
+```
+
+No Svelte, no JS in the string.
+
+---
+
+#### 2. Keep your existing `fetchAndOpenPDF` in `ChatMessage.svelte` and add one handler:
+
+```ts
+const fetchAndOpenPDF = async (pre_signed_url: string) => {
+  try {
+    const response = await fetch(pre_signed_url);
+    const data = await response.json();
+    const pdfUrl = data.url;
+    window.open(pdfUrl, "_blank", "noopener,noreferrer");
+  } catch (error) {
+    console.error("Failed to open PDF:", error);
+  }
+};
+
+function handleContentClick(event: MouseEvent) {
+  const target = event.target as HTMLElement | null;
+  if (!target) return;
+
+  const link = target.closest("a.kb-citation") as HTMLAnchorElement | null;
+  if (!link) return;
+
+  event.preventDefault();
+  const apiUrl = link.dataset.apiUrl;
+  if (apiUrl) {
+    fetchAndOpenPDF(apiUrl);
+  }
+}
+```
+
+Attach it to the existing wrapper that already contains `MarkdownRenderer`:
+
+```svelte
+<div
+  bind:this={contentEl}
+  class:mt-2={reasoningUpdates.length > 0 || searchUpdates.length > 0}
+  on:click={handleContentClick}
+>
+  <!-- unchanged -->
+  <div class="prose max-w-none ...">
+    <MarkdownRenderer content={message.content} sources={webSearchSources} />
+  </div>
+  {#if showLoaderDeferred}
+    <IconLoading classNames="loading inline ml-2 first:ml-0" />
+  {/if}
+</div>
+```
+
+That’s it:
+
+* Your server still returns one `fullText` string.
+* `MarkdownRenderer` stays untouched and battle-tested.
+* All messages (with or without citations) still go through the same path.
+* Only links with `class="kb-citation"` get special behavior; everything else is unaffected.
+
+Anything that tries to call `fetchAndOpenPDF` directly from inside the Markdown link target is doomed by construction. The data-attribute + delegated click is the minimal, robust way to wire your async function into this pipeline.
+```
